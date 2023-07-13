@@ -176,15 +176,80 @@ func TestDecode_StructSlice(t *testing.T) {
 		Age  int    `yaml:"age"`
 	}
 
+	t.Run("using yaml", func(t *testing.T) {
+		config := struct {
+			Users []user `apollo:"users,yaml"`
+		}{}
+
+		client := NewMockClient(ctrl)
+		client.EXPECT().GetString(gomock.Eq("users")).Return("- name: Alice\n  age: 18")
+
+		err := oap.Decode(&config, client, make(map[string][]agollo.OpOption))
+		require.NoError(t, err)
+
+		assert.Equal(t, []user{{Name: "Alice", Age: 18}}, config.Users)
+	})
+
+	t.Run("raw", func(t *testing.T) {
+		config := struct {
+			Users []user `apollo:"users"`
+		}{}
+
+		client := NewMockClient(ctrl)
+		client.EXPECT().GetString(gomock.Eq("users")).Return("- name: Alice\n  age: 18")
+
+		err := oap.Decode(&config, client, make(map[string][]agollo.OpOption))
+		require.NoError(t, err)
+
+		assert.Equal(t, []user{{Name: "Alice", Age: 18}}, config.Users)
+	})
+}
+
+func TestDecode_NonTag(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	config := struct {
-		Users []user `apollo:"users"`
+		Foo        string
+		unexported interface{}
 	}{}
 
 	client := NewMockClient(ctrl)
-	client.EXPECT().GetString(gomock.Eq("users")).Return("- name: Alice\n  age: 18")
 
 	err := oap.Decode(&config, client, make(map[string][]agollo.OpOption))
 	require.NoError(t, err)
+}
 
-	assert.Equal(t, []user{{Name: "Alice", Age: 18}}, config.Users)
+func TestDecode_WithNamespace(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	config := struct {
+		Foo string `apollo:"foo" apollo_namespace:"ns"`
+	}{}
+
+	client := NewMockClient(ctrl)
+	client.EXPECT().GetString(gomock.Eq("foo"), gomock.Any()).Return("bar")
+
+	err := oap.Decode(&config, client, make(map[string][]agollo.OpOption))
+	require.NoError(t, err)
+}
+
+func TestDecode_NestedWithNamespace(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	type FooConfig struct {
+		Foo string `apollo:"foo"`
+	}
+
+	config := struct {
+		FooConfig `apollo_namespace:"ns"`
+	}{}
+
+	client := NewMockClient(ctrl)
+	client.EXPECT().GetString(gomock.Eq("foo"), gomock.Any()).Return("bar")
+
+	err := oap.Decode(&config, client, make(map[string][]agollo.OpOption))
+	require.NoError(t, err)
 }
