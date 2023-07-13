@@ -24,13 +24,13 @@ func TestDecode_String(t *testing.T) {
 	}{}
 
 	client := NewMockClient(ctrl)
-	client.EXPECT().GetString(gomock.Eq("foo")).Return("hello")
+	client.EXPECT().GetString(gomock.Eq("foo")).Return("{}")
 	client.EXPECT().GetString(gomock.Eq("bar")).Return("hello")
 
 	err := oap.Decode(&config, client, make(map[string][]agollo.OpOption))
 	require.NoError(t, err)
 
-	assert.Equal(t, "hello", config.String)
+	assert.Equal(t, "{}", config.String)
 	assert.Equal(t, CustomStringType("hello"), config.CustomStringType)
 }
 
