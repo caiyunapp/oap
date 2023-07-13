@@ -1,83 +1,190 @@
 package oap_test
 
 import (
-	"net/url"
 	"testing"
+	"time"
 
 	gomock "github.com/golang/mock/gomock"
 	"github.com/philchia/agollo/v4"
 	"github.com/ringsaturn/oap"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-type DemoConfig struct {
-	Foo          string  `apollo:"foo"`
-	Hello        string  `apollo:"hello"`
-	Float32Field float32 `apollo:"float32Field"`
-	Float64Field float64 `apollo:"float64Field"`
-	BoolField    bool    `apollo:"boolField"`
-	Substruct    struct {
-		X string `json:"x"`
-		Y int    `json:"y"`
-	} `apollo:"substruct,json"`
-	SubstructFromYAML struct {
-		X string `yaml:"x"`
-		Y int    `yaml:"y"`
-	} `apollo:"substructFromYAML,yaml"`
-	SubstructWithInnerKeyDef struct {
-		X        string   `apollo:"SubstructWithInnerKeyDef.X"`
-		Y        string   `apollo:"SubstructWithInnerKeyDef.Y"`
-		URLField *url.URL `apollo:"SubstructWithInnerKeyDef.URL,url"`
-	}
+func TestDecode_String(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	type CustomStringType string
+
+	config := struct {
+		String           string           `apollo:"foo"`
+		CustomStringType CustomStringType `apollo:"bar"`
+	}{}
+
+	client := NewMockClient(ctrl)
+	client.EXPECT().GetString(gomock.Eq("foo")).Return("hello")
+	client.EXPECT().GetString(gomock.Eq("bar")).Return("hello")
+
+	err := oap.Decode(&config, client, make(map[string][]agollo.OpOption))
+	require.NoError(t, err)
+
+	assert.Equal(t, "hello", config.String)
+	assert.Equal(t, CustomStringType("hello"), config.CustomStringType)
 }
 
-var testJSONText string = `{"x": "123", "y": 0}`
-var yamlText string = `
-x: "fffff"
-y: 12313212
-`
-
-func TestDo(t *testing.T) {
+func TestDecode_Int(t *testing.T) {
 	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	config := struct {
+		Int      int           `apollo:"int"`
+		Int8     int8          `apollo:"int8"`
+		Int16    int16         `apollo:"int16"`
+		Int32    int32         `apollo:"int32"`
+		Int64    int64         `apollo:"int64"`
+		Uint     uint          `apollo:"uint"`
+		Uint8    uint8         `apollo:"uint8"`
+		Uint16   uint16        `apollo:"uint16"`
+		Uint32   uint32        `apollo:"uint32"`
+		Uint64   uint64        `apollo:"uint64"`
+		Duration time.Duration `apollo:"duration"`
+	}{}
+
 	client := NewMockClient(ctrl)
+	client.EXPECT().GetString(gomock.Eq("int")).Return("1")
+	client.EXPECT().GetString(gomock.Eq("int8")).Return("1")
+	client.EXPECT().GetString(gomock.Eq("int16")).Return("1")
+	client.EXPECT().GetString(gomock.Eq("int32")).Return("1")
+	client.EXPECT().GetString(gomock.Eq("int64")).Return("1")
+	client.EXPECT().GetString(gomock.Eq("uint")).Return("1")
+	client.EXPECT().GetString(gomock.Eq("uint8")).Return("1")
+	client.EXPECT().GetString(gomock.Eq("uint16")).Return("1")
+	client.EXPECT().GetString(gomock.Eq("uint32")).Return("1")
+	client.EXPECT().GetString(gomock.Eq("uint64")).Return("1")
+	client.EXPECT().GetString(gomock.Eq("duration")).Return("1m")
 
-	client.EXPECT().GetString(gomock.Eq("foo")).Return("bar").MaxTimes(1)
-	client.EXPECT().GetString(gomock.Eq("hello")).Return("hello").MaxTimes(1)
-	client.EXPECT().GetString(gomock.Eq("float32Field")).Return("3.14").MaxTimes(1)
-	client.EXPECT().GetString(gomock.Eq("float64Field")).Return("3.14159265").MaxTimes(1)
-	client.EXPECT().GetString(gomock.Eq("boolField")).Return("true").MaxTimes(1)
-	client.EXPECT().GetString(gomock.Eq("substruct")).Return(testJSONText).MaxTimes(1)
-	client.EXPECT().GetString(gomock.Eq("substructFromYAML")).Return(yamlText).MaxTimes(1)
-	client.EXPECT().GetString(gomock.Eq("SubstructWithInnerKeyDef.X")).Return("balabala").MaxTimes(1)
-	client.EXPECT().GetString(gomock.Eq("SubstructWithInnerKeyDef.Y")).Return("habahaba").MaxTimes(1)
-	client.EXPECT().GetString(gomock.Eq("SubstructWithInnerKeyDef.URL")).Return("http://example.com").MaxTimes(1)
+	err := oap.Decode(&config, client, make(map[string][]agollo.OpOption))
+	require.NoError(t, err)
 
-	oap.SetUnmarshalFunc("url", func(b []byte, i interface{}) error {
-		u, err := url.Parse(string(b))
-		if err != nil {
-			return err
-		}
-		urlV := i.(**url.URL)
-		*urlV = &*u
-		return nil
-	})
+	assert.Equal(t, 1, config.Int)
+	assert.Equal(t, int8(1), config.Int8)
+	assert.Equal(t, int16(1), config.Int16)
+	assert.Equal(t, int32(1), config.Int32)
+	assert.Equal(t, int64(1), config.Int64)
+	assert.Equal(t, uint(1), config.Uint)
+	assert.Equal(t, uint8(1), config.Uint8)
+	assert.Equal(t, uint16(1), config.Uint16)
+	assert.Equal(t, uint32(1), config.Uint32)
+	assert.Equal(t, uint64(1), config.Uint64)
+	assert.Equal(t, time.Minute, config.Duration)
+}
 
-	conf := &DemoConfig{}
-	if err := oap.Decode(conf, client, make(map[string][]agollo.OpOption)); err != nil {
-		panic(err)
+func TestDecode_Float(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	config := struct {
+		Float32 float32 `apollo:"float32"`
+		Float64 float64 `apollo:"float64"`
+	}{}
+
+	client := NewMockClient(ctrl)
+	client.EXPECT().GetString(gomock.Eq("float32")).Return("1.1")
+	client.EXPECT().GetString(gomock.Eq("float64")).Return("1.1")
+
+	err := oap.Decode(&config, client, make(map[string][]agollo.OpOption))
+	require.NoError(t, err)
+
+	assert.Equal(t, float32(1.1), config.Float32)
+	assert.Equal(t, float64(1.1), config.Float64)
+}
+
+func TestDecode_Bool(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	config := struct {
+		Bool bool `apollo:"bool"`
+	}{}
+
+	client := NewMockClient(ctrl)
+	client.EXPECT().GetString(gomock.Eq("bool")).Return("true")
+
+	err := oap.Decode(&config, client, make(map[string][]agollo.OpOption))
+	require.NoError(t, err)
+
+	assert.Equal(t, true, config.Bool)
+}
+
+func TestDecode_JSONStruct(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	type user struct {
+		Name string `json:"name"`
+		Age  int    `json:"age"`
 	}
-	assert.Equal(t, "bar", conf.Foo)
-	assert.Equal(t, "hello", conf.Hello)
-	assert.Equal(t, float32(3.14), conf.Float32Field)
-	assert.InDelta(t, float64(3.14159265), conf.Float64Field, 0.0000001)
-	assert.Equal(t, true, conf.BoolField)
 
-	assert.Equal(t, "123", conf.Substruct.X)
+	config := struct {
+		User    user  `apollo:"user"`
+		UserPtr *user `apollo:"user_ptr"`
+	}{}
 
-	assert.Equal(t, "fffff", conf.SubstructFromYAML.X)
-	assert.Equal(t, 12313212, conf.SubstructFromYAML.Y)
+	client := NewMockClient(ctrl)
+	client.EXPECT().GetString(gomock.Eq("user")).Return(`{"name":"Alice","age":18}`)
+	client.EXPECT().GetString(gomock.Eq("user_ptr")).Return(`{"name":"Alice","age":18}`)
 
-	assert.Equal(t, "balabala", conf.SubstructWithInnerKeyDef.X)
-	assert.Equal(t, "habahaba", conf.SubstructWithInnerKeyDef.Y)
-	assert.Equal(t, "example.com", conf.SubstructWithInnerKeyDef.URLField.Host)
+	err := oap.Decode(&config, client, make(map[string][]agollo.OpOption))
+	require.NoError(t, err)
+
+	assert.Equal(t, user{Name: "Alice", Age: 18}, config.User)
+	assert.Equal(t, &user{Name: "Alice", Age: 18}, config.UserPtr)
+}
+
+func TestDecode_YAMLStruct(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	type user struct {
+		Name string `yaml:"name"`
+		Age  int    `yaml:"age"`
+	}
+
+	config := struct {
+		User    user  `apollo:"user"`
+		UserPtr *user `apollo:"user_ptr"`
+	}{}
+
+	client := NewMockClient(ctrl)
+	client.EXPECT().GetString(gomock.Eq("user")).Return("name: Alice\nage: 18")
+	client.EXPECT().GetString(gomock.Eq("user_ptr")).Return("name: Alice\nage: 18")
+
+	err := oap.Decode(&config, client, make(map[string][]agollo.OpOption))
+	require.NoError(t, err)
+
+	assert.Equal(t, user{Name: "Alice", Age: 18}, config.User)
+	assert.Equal(t, &user{Name: "Alice", Age: 18}, config.UserPtr)
+}
+
+func TestDecode_StructSlice(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	type user struct {
+		Name string `yaml:"name"`
+		Age  int    `yaml:"age"`
+	}
+
+	config := struct {
+		Users []user `apollo:"users"`
+	}{}
+
+	client := NewMockClient(ctrl)
+	client.EXPECT().GetString(gomock.Eq("users")).Return("- name: Alice\n  age: 18")
+
+	err := oap.Decode(&config, client, make(map[string][]agollo.OpOption))
+	require.NoError(t, err)
+
+	assert.Equal(t, []user{{Name: "Alice", Age: 18}}, config.Users)
 }
