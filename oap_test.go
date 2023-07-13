@@ -1,6 +1,7 @@
 package oap_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -252,4 +253,47 @@ func TestDecode_NestedWithNamespace(t *testing.T) {
 
 	err := oap.Decode(&config, client, make(map[string][]agollo.OpOption))
 	require.NoError(t, err)
+}
+
+func ExampleDecode() {
+	const (
+		appid = "SampleApp"
+		addr  = "http://81.68.181.139:8080"
+		// http://81.68.181.139/app/access_key.html?#/appid=SampleApp
+		secret = ""
+	)
+
+	if secret == "" {
+		return
+	}
+
+	type FooConfig struct {
+		Foo string `apollo:"abc"`
+	}
+
+	config := struct {
+		FooConfig `apollo_namespace:"proper"`
+	}{}
+
+	client := agollo.NewClient(&agollo.Conf{
+		AppID:           appid,
+		MetaAddr:        addr,
+		AccesskeySecret: secret,
+	})
+	if err := client.Start(); err != nil {
+		panic(err)
+	}
+
+	if err := client.SubscribeToNamespaces("proper"); err != nil {
+		panic(err)
+	}
+
+	fmt.Println(client.GetAllKeys(agollo.WithNamespace("application")))
+	fmt.Println(client.GetAllKeys(agollo.WithNamespace("proper")))
+
+	if err := oap.Decode(&config, client, make(map[string][]agollo.OpOption)); err != nil {
+		panic(err)
+	}
+
+	fmt.Println(config.Foo)
 }
