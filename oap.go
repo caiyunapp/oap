@@ -56,6 +56,10 @@ func decodeStruct(ptr interface{}, client agollo.Client, opts []agollo.OpOption,
 }
 
 func decode(ptr interface{}, structField reflect.StructField, field reflect.Value, client agollo.Client, opts []agollo.OpOption, keyOpts map[string][]agollo.OpOption) error {
+	if !field.CanSet() {
+		return nil
+	}
+
 	tag := structField.Tag
 	apolloRawKey := tag.Get(apolloTag)
 	apolloKeyParts := strings.Split(apolloRawKey, ",")
@@ -70,6 +74,7 @@ func decode(ptr interface{}, structField reflect.StructField, field reflect.Valu
 
 	// using namespace
 	if ns := tag.Get(apolloNamespaceTag); ns != "" {
+		//nolint:makezero // we have already copy kopts and opts to newOpts
 		newOpts = append(newOpts, agollo.WithNamespace(ns))
 	}
 
@@ -81,15 +86,20 @@ func decode(ptr interface{}, structField reflect.StructField, field reflect.Valu
 			return fmt.Errorf("Decode %s error: %w", structField.Name, err)
 		}
 
-		if field.CanSet() {
-			field.Set(val.Elem())
-		}
+		field.Set(val.Elem())
 
 		return nil
 	}
 
 	// get config content
 	apolloVal := client.GetString(apolloKey, newOpts...)
+
+	// set raw string, first
+	if field.Kind() == reflect.String {
+		field.Set(reflect.ValueOf(apolloVal).Convert(val.Elem().Type()))
+
+		return nil
+	}
 
 	// use unmarshaller function
 	if len(apolloKeyParts) > 1 {
@@ -111,9 +121,7 @@ func decode(ptr interface{}, structField reflect.StructField, field reflect.Valu
 		return fmt.Errorf("unmarshal %s error: %w", apolloVal, err)
 	}
 
-	if field.CanSet() {
-		field.Set(val.Elem())
-	}
+	field.Set(val.Elem())
 
 	return nil
 }
