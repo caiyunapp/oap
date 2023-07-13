@@ -12,40 +12,22 @@ Usage like:
 import "github.com/ringsaturn/oap"
 
 type DemoConfig struct {
-	Foo          string  `apollo:"foo"`
-	Hello        string  `apollo:"hello"`
-	Float32Field float32 `apollo:"float32Field"`
-	Float64Field float64 `apollo:"float64Field"`
-	BoolField    bool    `apollo:"boolField"`
-	Substruct    struct {
-		X string `json:"x"`
-		Y int    `json:"y"`
-	} `apollo:"substruct,json"`
-	SubstructFromYAML struct {
-		X string `yaml:"x"`
-		Y int    `yaml:"y"`
-	} `apollo:"substructFromYAML,yaml"`
-	SubstructWithInnerKeyDef struct {
-		X        string   `apollo:"SubstructWithInnerKeyDef.X"`
-		Y        string   `apollo:"SubstructWithInnerKeyDef.Y"`
-		URLField *url.URL `apollo:"SubstructWithInnerKeyDef.URL,url"`  // `url` is unmarshall type name
-	}
+	Int      int           `apollo:"int"`
+	Int8     int8          `apollo:"int8"`
+	Int16    int16         `apollo:"int16"`
+	Int32    int32         `apollo:"int32"`
+	Int64    int64         `apollo:"int64"`
+	Uint     uint          `apollo:"uint"`
+	Uint8    uint8         `apollo:"uint8"`
+	Uint16   uint16        `apollo:"uint16"`
+	Uint32   uint32        `apollo:"uint32"`
+	Uint64   uint64        `apollo:"uint64"`
+	Duration time.Duration `apollo:"duration"`
 }
 
 func main(){
 	// init your apollo client here
 	// ...
-
-	// add custom unmarshall
-	oap.SetUnmarshalFunc("url", func(b []byte, i interface{}) error {
-		u, err := url.Parse(string(b))
-		if err != nil {
-			return err
-		}
-		urlV := i.(**url.URL)
-		*urlV = &*u
-		return nil
-	})
 
 	conf := &DemoConfig{}
 	if err := oap.Decode(conf, client, make(map[string][]agollo.OpOption)); err != nil {
@@ -62,4 +44,3 @@ Support types:
 - [x] Float32
 - [x] Float64
 - [x] Struct from JSON or YAML
-- [x] Struct with inner key def
