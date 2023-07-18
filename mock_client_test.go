@@ -7,8 +7,8 @@ package oap_test
 import (
 	reflect "reflect"
 
-	gomock "github.com/golang/mock/gomock"
 	agollo "github.com/philchia/agollo/v4"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockClient is a mock of Client interface.
