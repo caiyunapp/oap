@@ -22,7 +22,7 @@ var registryForUnmarshal = map[string]UnmarshalFunc{
 	"yaml": yaml.Unmarshal,
 }
 
-// You can use custom unmarshal for strcut type filed.
+// You can use custom unmarshal for struct type filed.
 // Predfined JSON&YAML.
 func SetUnmarshalFunc(name string, f UnmarshalFunc) {
 	registryForUnmarshal[name] = f
