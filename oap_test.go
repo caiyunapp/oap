@@ -9,7 +9,7 @@ import (
 	"github.com/ringsaturn/oap"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	gomock "go.uber.org/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestDecode_String(t *testing.T) {
