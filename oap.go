@@ -23,7 +23,7 @@ var registryForUnmarshal = map[string]UnmarshalFunc{
 }
 
 // You can use custom unmarshal for struct type filed.
-// Predfined JSON&YAML.
+// Package oap provides built-in support for JSON&YAML.
 func SetUnmarshalFunc(name string, f UnmarshalFunc) {
 	registryForUnmarshal[name] = f
 }
