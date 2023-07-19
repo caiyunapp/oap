@@ -1,3 +1,5 @@
+// Package oap is a library for loading Apollo configuration into a struct.
+// It supports JSON and YAML format. You can also use custom unmarshal for struct type filed.
 package oap
 
 import (
