@@ -1,4 +1,4 @@
-module github.com/ringsaturn/oap
+module github.com/caiyunapp/oap
 
 go 1.20
 

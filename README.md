@@ -3,13 +3,13 @@
 Install via:
 
 ```bash
-go install github.com/ringsaturn/oap
+go install github.com/caiyunapp/oap
 ```
 
 Usage like:
 
 ```go
-import "github.com/ringsaturn/oap"
+import "github.com/caiyunapp/oap"
 
 type DemoConfig struct {
 	Int      int           `apollo:"int"`
