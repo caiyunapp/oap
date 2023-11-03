@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/philchia/agollo/v4 v4.1.5
 	github.com/stretchr/testify v1.8.4
-	go.uber.org/mock v0.2.0
+	go.uber.org/mock v0.3.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
