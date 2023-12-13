@@ -297,3 +297,28 @@ func ExampleDecode() {
 
 	fmt.Println(config.Foo)
 }
+
+func TestDecodeTOMLStruct(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	type user struct {
+		Name string `toml:"name"`
+		Age  int    `toml:"age"`
+	}
+
+	config := struct {
+		User    user  `apollo:"user,toml"`
+		UserPtr *user `apollo:"user_ptr,toml"`
+	}{}
+
+	client := NewMockClient(ctrl)
+	client.EXPECT().GetString(gomock.Eq("user")).Return("name = \"Alice\"\nage = 18")
+	client.EXPECT().GetString(gomock.Eq("user_ptr")).Return("name = \"Alice\"\nage = 18")
+
+	err := oap.Decode(&config, client, make(map[string][]agollo.OpOption))
+	require.NoError(t, err)
+
+	assert.Equal(t, user{Name: "Alice", Age: 18}, config.User)
+	assert.Equal(t, &user{Name: "Alice", Age: 18}, config.UserPtr)
+}

@@ -1,5 +1,6 @@
 // Package oap is a library for loading Apollo configuration into a struct.
-// It supports JSON and YAML format. You can also use custom unmarshal for struct type filed.
+// It supports JSON/YAML/TOML format.
+// You can also use custom unmarshal for struct type filed.
 package oap
 
 import (
@@ -8,6 +9,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/pelletier/go-toml/v2"
 	"github.com/philchia/agollo/v4"
 	"gopkg.in/yaml.v3"
 )
@@ -22,10 +24,11 @@ type UnmarshalFunc func([]byte, interface{}) error
 var registryForUnmarshal = map[string]UnmarshalFunc{
 	"json": json.Unmarshal,
 	"yaml": yaml.Unmarshal,
+	"toml": toml.Unmarshal,
 }
 
 // You can use custom unmarshal for struct type filed.
-// Package oap provides built-in support for JSON&YAML.
+// Package oap provides built-in support for JSON/YAML/TOML.
 func SetUnmarshalFunc(name string, f UnmarshalFunc) {
 	registryForUnmarshal[name] = f
 }

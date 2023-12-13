@@ -3,6 +3,7 @@ module github.com/caiyunapp/oap
 go 1.20
 
 require (
+	github.com/pelletier/go-toml/v2 v2.1.1
 	github.com/philchia/agollo/v4 v4.1.5
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/mock v0.3.0
