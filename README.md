@@ -1,4 +1,4 @@
-# Decode Apollo config to strcut field
+# Decode Apollo config to struct field
 
 Install via:
 
